@@ -13,7 +13,7 @@ def grade_point_to_letter_mark(grade_point):
   0.75 or higher F
   0.00 or higher FF
   """
-
+  
   conversion_table = {
     4.10: 'A+',
     3.75: 'A',
@@ -84,10 +84,10 @@ class MeasurementTopic:
     self.assessments[number] = assessment
 
 class Subject:
-  def __init__(self, name, units, holistic, num_measurement_topics):
+  def __init__(self, name, units, is_holistic, num_measurement_topics):
     self.name = name
     self.units = units
-    self.holistic = holistic
+    self.holistic = is_holistic
     self.measurement_topics = []
     
     for i in range(num_measurement_topics):
@@ -97,6 +97,14 @@ class Subject:
       topic = MeasurementTopic(topic_name, topic_weight)
       self.measurement_topics.append(topic)
 
+  def evaluate_letter_grade(self):
+    total_grade_point = 0
+    for topic in self.measurement_topics:
+      topic_grade_point = letter_mark_to_grade_point(topic.evaluate_letter_grade(self.holistic))
+      total_grade_point += topic_grade_point * topic.weight # ???
+
+    return grade_point_to_letter_mark(total_grade_point)
+
 subjects = []
 
 while True:
@@ -104,6 +112,7 @@ while True:
     "0. Calculate grades\n"
     "1. New subject\n"
     "2. New assessment\n"
+    )
     # "3. Modify subject\n"
     # "4. Modify measurement topic\n"
     # "5. Modify assessment\n"
@@ -111,17 +120,16 @@ while True:
     # "7. Delete measurement topic\n"
     # "8. Delete assessment\n"
     # "9. Exit"
-    )
 
   choice = input("Please enter your choice: ")
 
   if choice == "0":
-    calculation_choice = input("Please select an option:\n"
-                   "0. Calculate measurement topic grade\n"
-                   "1. Calculate subject grade\n"
-                   "2. Calculate GPA\n"
-                   "Enter your choice: ")
-
+    print("Please select an option:\n",
+          "0. Calculate measurement topic grade\n",
+          "1. Calculate subject grade\n",
+          "2. Calculate GPA\n",)
+    
+    calculation_choice = input("Enter your choice: ")
     if calculation_choice == "0":
       # Code for calculating measurement topic grade
       subject_index = 0
@@ -142,8 +150,7 @@ while True:
         topic_index = topic_number - 1
         topic = subject.measurement_topics[topic_index]
 
-        subject_holistic = subject.holistic.lower() == "yes"
-        topic_grade = topic.evaluate_letter_grade(subject_holistic)
+        topic_grade = topic.evaluate_letter_grade(subject.holistic)
         topic_grade_point = letter_mark_to_grade_point(topic_grade)
 
         print(f"Measurement topic grade: {topic_grade}")
@@ -161,8 +168,7 @@ while True:
       else:
         subject = subjects[subject_choice - 1]
 
-        subject_holistic = subject.holistic.lower() == "yes"
-        subject_grade = subject.measurement_topics[0].evaluate_letter_grade(subject_holistic)
+        subject_grade = subject.measurement_topics[0].evaluate_letter_grade(subject.holistic)
         subject_grade_point = letter_mark_to_grade_point(subject_grade)
 
         print(f"Subject grade: {subject_grade}")
@@ -174,8 +180,7 @@ while True:
       total_units = 0
 
       for subject in subjects:
-        subject_holistic = subject.holistic.lower() == "yes"
-        subject_grade_point = letter_mark_to_grade_point(subject.measurement_topics[0].evaluate_letter_grade(subject_holistic))
+        subject_grade_point = letter_mark_to_grade_point(subject.measurement_topics[0].evaluate_letter_grade(subject.holistic))
         total_grade_points += subject_grade_point * subject.units
         total_units += subject.units
 
@@ -190,7 +195,7 @@ while True:
     # Code for creating a new subject
     name = input("Enter the name of the subject: ")
     units = int(input("Enter the number of units for the subject: "))
-    holistic = input("Is the subject holistic? (yes/no): ")
+    holistic = input("Is the subject holistic? (yes/n): ")
     num_measurement_topics = int(input("Enter the number of measurement topics for the subject: "))
 
     subject = Subject(name, units, holistic.lower() == "yes", num_measurement_topics)
