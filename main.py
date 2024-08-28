@@ -1,3 +1,5 @@
+import sys
+
 # GPA Calculator
 
 def grade_point_to_letter_mark(grade_point):
@@ -33,16 +35,16 @@ def grade_point_to_letter_mark(grade_point):
 def letter_mark_to_grade_point(letter_mark):
   # use a hash map to map the values:
   """
-  Letter Mark to Grade Point Table    
-  A+    4.2
-  A    4
-  A-    3.5
-  B    3
-  B-    2.5
-  C    2
-  D    1.5
-  F    1
-  FF    0
+  Letter Mark to Grade Point Table  \n  
+  A+    4.2\n
+  A    4\n
+  A-    3.5\n
+  B    3\n
+  B-    2.5\n
+  C    2\n
+  D    1.5\n
+  F    1\n
+  FF    0\n
   """
 
   conversion_table = {
@@ -71,12 +73,16 @@ class MeasurementTopic:
     self.assessments = {}
 
   def evaluate_letter_grade(self, subject_holistic):
+    if self.assessments.values() == []:
+      print("No assessments to evaluate! :c")
+      return
+
     if subject_holistic:
-      average_grade_point = sum(assessment.grade_point for assessment in self.assessments.values()) / len(self.assessments)
+      average_grade_point = sum(letter_mark_to_grade_point(assessment.letter_mark) for assessment in self.assessments.values()) / len(self.assessments)
       average_letter_mark = grade_point_to_letter_mark(average_grade_point)
       return average_letter_mark
     else:
-      highest_letter_mark = max(assessment.letter_mark for assessment in self.assessments.values())
+      highest_letter_mark = grade_point_to_letter_mark(max(letter_mark_to_grade_point(assessment.letter_mark) for assessment in self.assessments.values()))
       return highest_letter_mark
   
   def add_assessment(self, number, letter_mark):
@@ -96,30 +102,36 @@ class Subject:
       
       topic = MeasurementTopic(topic_name, topic_weight)
       self.measurement_topics.append(topic)
-
+  
   def evaluate_letter_grade(self):
     total_grade_point = 0
+    total_weight = 0
     for topic in self.measurement_topics:
-      topic_grade_point = letter_mark_to_grade_point(topic.evaluate_letter_grade(self.holistic))
-      total_grade_point += topic_grade_point * topic.weight # ???
+        topic_grade_point = letter_mark_to_grade_point(topic.evaluate_letter_grade(self.holistic))
+        total_grade_point += topic_grade_point * topic.weight
+        total_weight += topic.weight
 
-    return grade_point_to_letter_mark(total_grade_point)
+    if total_weight == 0:
+        return None  # or handle the case where there are no weights
+
+    weighted_average = total_grade_point / total_weight
+    return grade_point_to_letter_mark(weighted_average)
 
 subjects = []
 
 while True:
   print("Please select an option:\n"
-    "0. Calculate grades\n"
-    "1. New subject\n"
-    "2. New assessment\n"
-    )
-    # "3. Modify subject\n"
-    # "4. Modify measurement topic\n"
-    # "5. Modify assessment\n"
-    # "6. Delete subject\n"
-    # "7. Delete measurement topic\n"
-    # "8. Delete assessment\n"
-    # "9. Exit"
+  "0. Calculate grades\n"
+  "1. New subject\n"
+  "2. New assessment\n"
+  "3. Exit"
+  ) # Never gonna give you up never gonna let you down never gonna run around and deser you never gonna make you cry never gonna sax you goodbye never gonna tell a lie and hurt you            
+  # "3. Modify subject\n"
+  # "4. Modify measurement topic\n"
+  # "5. Modify assessment\n"
+  # "6. Delete subject\n"
+  # "7. Delete measurement topic\n"
+  # "8. Delete assessment\n"
 
   choice = input("Please enter your choice: ")
 
@@ -168,7 +180,7 @@ while True:
       else:
         subject = subjects[subject_choice - 1]
 
-        subject_grade = subject.measurement_topics[0].evaluate_letter_grade(subject.holistic)
+        subject_grade = subject.evaluate_letter_grade()
         subject_grade_point = letter_mark_to_grade_point(subject_grade)
 
         print(f"Subject grade: {subject_grade}")
@@ -180,7 +192,7 @@ while True:
       total_units = 0
 
       for subject in subjects:
-        subject_grade_point = letter_mark_to_grade_point(subject.measurement_topics[0].evaluate_letter_grade(subject.holistic))
+        subject_grade_point = letter_mark_to_grade_point(subject.evaluate_letter_grade())
         total_grade_points += subject_grade_point * subject.units
         total_units += subject.units
 
@@ -195,10 +207,10 @@ while True:
     # Code for creating a new subject
     name = input("Enter the name of the subject: ")
     units = int(input("Enter the number of units for the subject: "))
-    holistic = input("Is the subject holistic? (yes/n): ")
+    holistic = input("Is the subject holistic? (y/n): ")
     num_measurement_topics = int(input("Enter the number of measurement topics for the subject: "))
 
-    subject = Subject(name, units, holistic.lower() == "yes", num_measurement_topics)
+    subject = Subject(name, units, holistic.lower() == "y", num_measurement_topics)
     subjects.append(subject)
     print("Subject created successfully.")
   elif choice == "2":
@@ -229,8 +241,7 @@ while True:
       topic.add_assessment(number, letter_mark)
       print("Assessment added successfully.")
   elif choice == "3":
-    # Code for modifying an existing subject
-    
+    print("Exiting...")
     pass
   elif choice == "4":
     # Code for modifying an existing measurement topic
