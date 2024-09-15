@@ -94,8 +94,25 @@ class Subject:
   def __init__(self, name, units, holistic, measurement_topics):
     self.name = name
     self.units = units
-    self.holistic = is_holistic
+    self.holistic = holistic
     self.measurement_topics = []
+
+  def evaluate_letter_grade(self):
+    if self.measurement_topics == []:
+      print("No measurement topics to evaluate! :c")
+      return
+
+    # return weighted average of measurement topic grades
+    total_weighted_grade_point = 0
+    total_weight = 0
+    for topic in self.measurement_topics:
+      topic_grade_point = letter_mark_to_grade_point(topic.evaluate_letter_grade(self.holistic))
+      total_weighted_grade_point += topic_grade_point * topic.weight
+      total_weight += topic.weight
+    
+    average_grade_point = total_weighted_grade_point / total_weight
+    average_letter_mark = grade_point_to_letter_mark(average_grade_point)
+    return average_letter_mark
     
 subjects = []
 # Read Subjects from data.json
@@ -115,16 +132,15 @@ with open('data.json', 'r') as file:
       topic_weight = topic_data['weight']
       
       topic = MeasurementTopic(topic_name, topic_weight)
+      # print(topic_data['assessments']['1']['letter_mark'])
       
-      print(topic_data)
-
-      for assessment_data in topic_data['assessments']:
-        print(assessment_data)
-        number = assessment_data['number']
+      # Add assessments to the topic
+      for number, assessment_data in topic_data['assessments'].items():
         letter_mark = assessment_data['letter_mark']
+
         
         topic.add_assessment(number, letter_mark)
-      
+       
       subject.measurement_topics.append(topic)
     
     subjects.append(subject)
@@ -300,7 +316,7 @@ while True:
 
       for subject in subjects:
         subject_holistic = subject.holistic
-        subject_grade_point = letter_mark_to_grade_point(subject.measurement_topics[0].evaluate_letter_grade(subject_holistic))
+        subject_grade_point = letter_mark_to_grade_point(subject.evaluate_letter_grade())
         total_grade_points += subject_grade_point * subject.units
         total_units += subject.units
 
