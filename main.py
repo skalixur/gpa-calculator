@@ -16,7 +16,7 @@ def grade_point_to_letter_mark(grade_point):
   0.75 or higher F
   0.00 or higher FF
   """
-
+  
   conversion_table = {
     4.10: 'A+',
     3.75: 'A',
@@ -36,16 +36,16 @@ def grade_point_to_letter_mark(grade_point):
 def letter_mark_to_grade_point(letter_mark):
   # use a hash map to map the values:
   """
-  Letter Mark to Grade Point Table    
-  A+    4.2
-  A    4
-  A-    3.5
-  B    3
-  B-    2.5
-  C    2
-  D    1.5
-  F    1
-  FF    0
+  Letter Mark to Grade Point Table  \n  
+  A+    4.2\n
+  A    4\n
+  A-    3.5\n
+  B    3\n
+  B-    2.5\n
+  C    2\n
+  D    1.5\n
+  F    1\n
+  FF    0\n
   """
 
   conversion_table = {
@@ -74,12 +74,16 @@ class MeasurementTopic:
     self.assessments = {}
 
   def evaluate_letter_grade(self, subject_holistic):
+    if self.assessments.values() == []:
+      print("No assessments to evaluate! :c")
+      return
+
     if subject_holistic:
-      average_grade_point = sum(assessment.grade_point for assessment in self.assessments.values()) / len(self.assessments)
+      average_grade_point = sum(letter_mark_to_grade_point(assessment.letter_mark) for assessment in self.assessments.values()) / len(self.assessments)
       average_letter_mark = grade_point_to_letter_mark(average_grade_point)
       return average_letter_mark
     else:
-      highest_letter_mark = max(assessment.letter_mark for assessment in self.assessments.values())
+      highest_letter_mark = grade_point_to_letter_mark(max(letter_mark_to_grade_point(assessment.letter_mark) for assessment in self.assessments.values()))
       return highest_letter_mark
   
   def add_assessment(self, number, letter_mark):
@@ -90,7 +94,7 @@ class Subject:
   def __init__(self, name, units, holistic, measurement_topics):
     self.name = name
     self.units = units
-    self.holistic = holistic
+    self.holistic = is_holistic
     self.measurement_topics = []
     
 subjects = []
@@ -265,8 +269,7 @@ while True:
         topic_index = topic_number - 1
         topic = subject.measurement_topics[topic_index]
 
-        subject_holistic = subject.holistic.lower() == "yes"
-        topic_grade = topic.evaluate_letter_grade(subject_holistic)
+        topic_grade = topic.evaluate_letter_grade(subject.holistic)
         topic_grade_point = letter_mark_to_grade_point(topic_grade)
 
         print(f"Measurement topic grade: {topic_grade}")
@@ -284,8 +287,7 @@ while True:
       else:
         subject = subjects[subject_choice - 1]
 
-        subject_holistic = subject.holistic.lower() == "yes"
-        subject_grade = subject.measurement_topics[0].evaluate_letter_grade(subject_holistic)
+        subject_grade = subject.evaluate_letter_grade()
         subject_grade_point = letter_mark_to_grade_point(subject_grade)
 
         print(f"Subject grade: {subject_grade}")
