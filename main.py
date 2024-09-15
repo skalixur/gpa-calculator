@@ -1,3 +1,6 @@
+import json
+import atexit
+
 # GPA Calculator
 
 def grade_point_to_letter_mark(grade_point):
@@ -84,38 +87,158 @@ class MeasurementTopic:
     self.assessments[number] = assessment
 
 class Subject:
-  def __init__(self, name, units, holistic, num_measurement_topics):
+  def __init__(self, name, units, holistic, measurement_topics):
     self.name = name
     self.units = units
     self.holistic = holistic
     self.measurement_topics = []
     
-    for i in range(num_measurement_topics):
-      topic_name = input(f"Enter the name of measurement topic {i+1}: ")
-      topic_weight = float(input(f"Enter the weight of measurement topic {i+1}: "))
+subjects = []
+# Read Subjects from data.json
+with open('data.json', 'r') as file:
+  subjects_data = json.load(file)
+  subjects = []
+  for subject_data in subjects_data['subjects']:
+    name = subject_data['name']
+    units = subject_data['units']
+    holistic = subject_data['holistic']
+    num_measurement_topics = len(subject_data['measurement_topics'])
+    
+    subject = Subject(name, units, holistic, num_measurement_topics)
+    
+    for topic_data in subject_data['measurement_topics']:
+      topic_name = topic_data['name']
+      topic_weight = topic_data['weight']
       
       topic = MeasurementTopic(topic_name, topic_weight)
-      self.measurement_topics.append(topic)
+      
+      print(topic_data)
 
-subjects = []
+      for assessment_data in topic_data['assessments']:
+        print(assessment_data)
+        number = assessment_data['number']
+        letter_mark = assessment_data['letter_mark']
+        
+        topic.add_assessment(number, letter_mark)
+      
+      subject.measurement_topics.append(topic)
+    
+    subjects.append(subject)
+
+# Custom JSON encoder class
+class SubjectEncoder(json.JSONEncoder):
+  def default(self, obj):
+    if isinstance(obj, Subject):
+      return obj.__dict__
+    elif isinstance(obj, MeasurementTopic):
+      return obj.__dict__
+    elif isinstance(obj, Assessment):
+      return obj.__dict__
+    return super().default(obj)
+
+# atexit, save subjects to data.json
+def save_subjects_data():
+  subjects_data = {'subjects': subjects}
+  with open('data.json', 'w') as file:
+    file.write(json.dumps(subjects_data, cls=SubjectEncoder))
+
+atexit.register(save_subjects_data)
 
 while True:
   print("Please select an option:\n"
-    "0. Calculate grades\n"
-    "1. New subject\n"
-    "2. New assessment\n"
-    # "3. Modify subject\n"
-    # "4. Modify measurement topic\n"
-    # "5. Modify assessment\n"
-    # "6. Delete subject\n"
-    # "7. Delete measurement topic\n"
+    "1. Help\n"
+    "2. New subject\n"
+    "3. New assessment\n"
+    "4. Calculate Grade\n"
+    # "5. Modify subject\n"
+    # "6. Modify assessment\n"
+    # "7. Delete subject\n"
     # "8. Delete assessment\n"
-    # "9. Exit"
+    "9. Exit\n"
     )
 
   choice = input("Please enter your choice: ")
 
-  if choice == "0":
+  if choice == "1":
+    # Help
+    print("This is a GPA calculator program.")
+    print("""To use this program, please create a subject.
+          A subject is a course or a module that you are taking, and you must enter: its name, the number of units it is worth, whether it is holistic or not, and the number of measurement topics it has.
+          
+          A measurement topic is a category of assessment within a subject, and you must enter: its name and its weight for measurement topic within the subject.
+          
+          An assessment is a graded piece of work within a measurement topic, and you must enter: the number of the assessment and the letter mark you received for the assessment.
+          
+          You can calculate the grade for a measurement topic, a subject, or your GPA after entering your subjects and assessments.
+          
+          In summary,
+          - Create a subject
+            - Enter the name of the subject
+            - Enter the number of units the subject is worth
+            - Enter whether the subject is holistic or not
+            - Enter the number of measurement topics the subject has
+              - For each measurement topic, enter the name of the measurement topic and the weight of the measurement topic
+          
+          - Create an assessment
+            - Select the subject
+            - Select the measurement topic
+            - Enter the number of the assessment
+            - Enter the letter mark of the assessment
+          
+          - Calculate Grade (AFTER entering subjects and assessments)
+            - Calculate measurement topic grade
+              - Select the subject
+              - Select the measurement topic
+            - Calculate subject grade
+              - Select the subject
+            - Calculate GPA
+              - No selection required
+          """)
+  elif choice == "2":
+    # Code for creating a new subject
+    name = input("Enter the name of the subject: ")
+    units = float(input("Enter the number of units for the subject: "))
+    holistic = input("Is the subject holistic? (yes/no): ")
+    num_measurement_topics = int(input("Enter the number of measurement topics for the subject: "))
+
+    measurement_topics = []
+    for i in range(num_measurement_topics):
+      topic_name = f"MT{i+1}"
+      topic_weight = float(input(f"Enter the weight of measurement topic {i+1}: "))
+      topic = MeasurementTopic(topic_name, topic_weight)
+      measurement_topics.append(topic)
+
+    subject = Subject(name, units, holistic.lower() == "yes", measurement_topics)
+    subjects.append(subject)
+    print("Subject created successfully.")
+  elif choice == "3":
+    # Code for creating a new assessment
+    subject_index = 0
+    for i, subject in enumerate(subjects):
+      print(f"{i+1}. {subject.name}")
+    subject_choice = int(input("Please enter the number of the subject: "))
+
+    if subject_choice < 1 or subject_choice > len(subjects):
+      print("Invalid subject choice. Please try again.")
+    else:
+      subject = subjects[subject_choice - 1]
+
+      for i, topic in enumerate(subject.measurement_topics):
+        print(f"{i+1}. {topic.name}")
+        
+      topic_number = int(input("Enter the number of the measurement topic: "))
+      
+      topic_index = topic_number - 1
+      topic = subject.measurement_topics[topic_index]
+
+      for number, assessment in topic.assessments.items():
+        print(f"Assessment {number}: {assessment.letter_mark}")
+
+      number = str(len(topic.assessments) + 1)
+      letter_mark = input("Enter the letter mark: ")
+      topic.add_assessment(number, letter_mark)
+      print("Assessment added successfully.")
+  elif choice == "4":
     calculation_choice = input("Please select an option:\n"
                    "0. Calculate measurement topic grade\n"
                    "1. Calculate subject grade\n"
@@ -174,7 +297,7 @@ while True:
       total_units = 0
 
       for subject in subjects:
-        subject_holistic = subject.holistic.lower() == "yes"
+        subject_holistic = subject.holistic
         subject_grade_point = letter_mark_to_grade_point(subject.measurement_topics[0].evaluate_letter_grade(subject_holistic))
         total_grade_points += subject_grade_point * subject.units
         total_units += subject.units
@@ -185,48 +308,7 @@ while True:
 
     else:
       print("Invalid choice. Please try again.")
-    pass
-  elif choice == "1":
-    # Code for creating a new subject
-    name = input("Enter the name of the subject: ")
-    units = int(input("Enter the number of units for the subject: "))
-    holistic = input("Is the subject holistic? (yes/no): ")
-    num_measurement_topics = int(input("Enter the number of measurement topics for the subject: "))
-
-    subject = Subject(name, units, holistic.lower() == "yes", num_measurement_topics)
-    subjects.append(subject)
-    print("Subject created successfully.")
-  elif choice == "2":
-    # Code for creating a new assessment
-    subject_index = 0
-    for i, subject in enumerate(subjects):
-      print(f"{i+1}. {subject.name}")
-    subject_choice = int(input("Please enter the number of the subject: "))
-
-    if subject_choice < 1 or subject_choice > len(subjects):
-      print("Invalid subject choice. Please try again.")
-    else:
-      subject = subjects[subject_choice - 1]
-
-      for i, topic in enumerate(subject.measurement_topics):
-        print(f"{i+1}. {topic.name}")
-        
-      topic_number = int(input("Enter the number of the measurement topic: "))
-      
-      topic_index = topic_number - 1
-      topic = subject.measurement_topics[topic_index]
-
-      for number, assessment in topic.assessments.items():
-        print(f"Assessment {number}: {assessment.letter_mark}")
-
-      number = str(len(topic.assessments) + 1)
-      letter_mark = input("Enter the letter mark: ")
-      topic.add_assessment(number, letter_mark)
-      print("Assessment added successfully.")
-  elif choice == "3":
-    # Code for modifying an existing subject
-    
-    pass
+    pass 
   elif choice == "4":
     # Code for modifying an existing measurement topic
     pass
@@ -244,6 +326,7 @@ while True:
     pass
   elif choice == "9":
     # Exit the program
+    exit()
     break
   else:
     print("Invalid choice. Please try again.")

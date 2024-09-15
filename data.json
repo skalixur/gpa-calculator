@@ -1,0 +1,20 @@
+{
+  "subjects": [
+    {
+      "name": "Math",
+      "units": 2.5,
+      "holistic": false,
+      "measurement_topics": [
+        {
+          "name": "MT1",
+          "weight": 20.0,
+          "assessments": { "1": { "number": "1", "letter_mark": "B" } }
+        },
+        { "name": "MT2", "weight": 20.0, "assessments": {} },
+        { "name": "MT3", "weight": 20.0, "assessments": {} },
+        { "name": "MT4", "weight": 20.0, "assessments": {} },
+        { "name": "MT5", "weight": 20.0, "assessments": {} }
+      ]
+    }
+  ]
+}
