@@ -95,7 +95,7 @@ class Subject:
     self.name = name
     self.units = units
     self.holistic = holistic
-    self.measurement_topics = []
+    self.measurement_topics = measurement_topics
 
   def evaluate_letter_grade(self):
     if self.measurement_topics == []:
@@ -123,9 +123,8 @@ with open('data.json', 'r') as file:
     name = subject_data['name']
     units = subject_data['units']
     holistic = subject_data['holistic']
-    num_measurement_topics = len(subject_data['measurement_topics'])
-    
-    subject = Subject(name, units, holistic, num_measurement_topics)
+    measurement_topics = []
+    subject = Subject(name, units, holistic, measurement_topics)
     
     for topic_data in subject_data['measurement_topics']:
       topic_name = topic_data['name']
